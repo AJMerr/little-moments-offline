@@ -1,1 +1,6 @@
 .env
+data/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*

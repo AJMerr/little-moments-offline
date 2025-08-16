@@ -5,8 +5,10 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -102,5 +104,36 @@ func logger(next http.Handler) http.Handler {
 			"user_agent": r.UserAgent(),
 		}
 		_ = json.NewEncoder(os.Stdout).Encode(rec)
+	})
+}
+
+// Panic recovery
+// This will return a JSON log with a status of 500 as well as a stack trace
+func panicRecovery(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rec := recover(); rec != nil {
+				// Get ID from ctc
+				id, _ := reqIDFromCtx(r.Context())
+
+				// Logs errors in a single JSON line
+				errRec := map[string]any{
+					"level":      "error",
+					"request_id": id,
+					"panic":      fmt.Sprint(rec),
+					"stack":      string(debug.Stack()),
+					"method":     r.Method,
+					"path":       r.URL.Path,
+				}
+				_ = json.NewEncoder(os.Stdout).Encode(errRec)
+
+				// Returns an error resposne
+				w.Header().Set("Content-Type", "application/json; charset-utf-8")
+				w.WriteHeader(http.StatusInternalServerError)
+				_ = json.NewEncoder(w).Encode(map[string]any{"error": "internal_server_error"})
+			}
+		}()
+
+		next.ServeHTTP(w, r)
 	})
 }

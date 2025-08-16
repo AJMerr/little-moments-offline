@@ -9,5 +9,5 @@ func RouterHandler() http.Handler {
 
 	mux.HandleFunc("GET /healthz", healthzHandler)
 	mux.HandleFunc("GET /version", versionHandler)
-	return reqID(mux)
+	return reqID(logger(mux))
 }

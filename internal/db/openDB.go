@@ -22,7 +22,7 @@ func OpenDB(path string) (*gorm.DB, error) {
 	dsn := SQLiteDSN(path)
 
 	gdb, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
+		DisableForeignKeyConstraintWhenMigrating: false,
 	})
 
 	if err != nil {

@@ -9,5 +9,6 @@ func RouterHandler() http.Handler {
 
 	mux.HandleFunc("GET /healthz", healthzHandler)
 	mux.HandleFunc("GET /version", versionHandler)
-	return reqID(logger(mux))
+	mux.HandleFunc("GET /panic", func(w http.ResponseWriter, r *http.Request) { panic("AAAAAAHHH BEES") })
+	return reqID(logger(panicRecovery(mux)))
 }

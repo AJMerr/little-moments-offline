@@ -6,9 +6,21 @@ import (
 	"net/http"
 
 	"github.com/AJMerr/little-moments-offline/internal/api"
+	db "github.com/AJMerr/little-moments-offline/internal/db"
 )
 
 func main() {
+
+	// DB Connection and migrate if needed
+	gdb, dbErr := db.OpenDB("data/app.db")
+	if dbErr != nil {
+		log.Fatal(dbErr)
+	}
+
+	if dbErr := db.Migrate(gdb); dbErr != nil {
+		log.Fatalf("migrate: %v", dbErr)
+	}
+
 	// Sets a var for the Router
 	router := api.RouterHandler()
 

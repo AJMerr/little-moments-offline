@@ -22,7 +22,7 @@ type S3Config struct {
 type S3 struct {
 	raw     *s3.Client
 	presign *s3.PresignClient
-	config  S3Config
+	Config  S3Config
 }
 
 func NewS3Client(ctx context.Context, c S3Config) (*S3, error) {
@@ -47,12 +47,12 @@ func NewS3Client(ctx context.Context, c S3Config) (*S3, error) {
 	return &S3{
 		raw:     client,
 		presign: s3.NewPresignClient(client),
-		config:  c,
+		Config:  c,
 	}, nil
 }
 
 func (s *S3) Health(ctx context.Context) error {
-	_, err := s.raw.HeadBucket(ctx, &s3.HeadBucketInput{Bucket: &s.config.BucketPhotos})
+	_, err := s.raw.HeadBucket(ctx, &s3.HeadBucketInput{Bucket: &s.Config.BucketPhotos})
 	return err
 }
 

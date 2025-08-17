@@ -1,12 +1,17 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/AJMerr/little-moments-offline/internal/api"
 	db "github.com/AJMerr/little-moments-offline/internal/db"
+	"github.com/AJMerr/little-moments-offline/internal/storage"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -19,6 +24,33 @@ func main() {
 
 	if dbErr := db.Migrate(gdb); dbErr != nil {
 		log.Fatalf("migrate: %v", dbErr)
+	}
+
+	// Loads .env
+	_ = godotenv.Load()
+
+	// Sets up MinIO config
+	s3Config := storage.S3Config{
+		Endpoint:       os.Getenv("LM_S3_ENDPOINT"),
+		Region:         os.Getenv("LM_S3_REGION"),
+		AccessKey:      os.Getenv("LM_S3_ACCESS_KEY"),
+		SecretKey:      os.Getenv("LM_S3_SECRET_KEY"),
+		ForcePathStyle: true,
+		BucketPhotos:   os.Getenv("LM_S3_BUCKET_PHOTOS"),
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Starts MinIO Client
+	s3c, s3Err := storage.NewS3Client(ctx, s3Config)
+	if s3Err != nil {
+		log.Fatal("s3 client:", s3Err)
+	}
+
+	// Health check for bucket
+	if s3Err := s3c.Health(ctx); s3Err != nil {
+		log.Printf("WARN (%s): %v", s3Config.BucketPhotos, s3Err)
 	}
 
 	// Sets a var for the Router

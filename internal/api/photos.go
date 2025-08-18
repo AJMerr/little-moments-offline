@@ -106,10 +106,10 @@ func ConfirmPhoto(gdb *gorm.DB, s3 *storage.S3) http.HandlerFunc {
 		if err := gdb.WithContext(r.Context()).Create(&photo).Error; err != nil {
 			// Tries to get existing key
 			var existingKey db.Photo
-			tx := gdb.WithContext(r.Context()).First(&existingKey, "original_key  = ?", in.Key)
+			tx := gdb.WithContext(r.Context()).First(&existingKey, "origin_key = ?", in.Key)
 			if tx.Error == nil {
 				toJSON(w, http.StatusOK, map[string]any{
-					"id": existingKey.ID, "original_key": existingKey.OriginKey,
+					"id": existingKey.ID, "origin_key": existingKey.OriginKey,
 					"bytes": existingKey.Bytes, "content_type": existingKey.ContentType,
 					"created_at": existingKey.CreatedAt,
 				})
@@ -119,7 +119,7 @@ func ConfirmPhoto(gdb *gorm.DB, s3 *storage.S3) http.HandlerFunc {
 			return
 		}
 		toJSON(w, http.StatusCreated, map[string]any{
-			"id": photo.ID, "original_key": photo.OriginKey,
+			"id": photo.ID, "origin_key": photo.OriginKey,
 			"bytes": photo.Bytes, "content_type": photo.ContentType,
 			"created_at": photo.CreatedAt,
 		})

@@ -232,3 +232,35 @@ func GetAllPhotos(gdb *gorm.DB) http.HandlerFunc {
 		toJSON(w, http.StatusOK, out)
 	}
 }
+
+// Function to GET a photo by ID
+func GetPhotoByID(gdb *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+
+		var p db.Photo
+		err := gdb.WithContext(r.Context()).
+			Where("id = ? AND owner_id = ?", id, "local_user"). /// DELETE Later, will use Auth user
+			First(&p).Error
+
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				writeError(w, http.StatusBadRequest, "photo_not_found")
+				return
+			}
+			writeError(w, http.StatusInternalServerError, "db_lookup_failed")
+			return
+		}
+
+		out := photoItem{
+			ID:          p.ID,
+			Title:       p.Title,
+			Description: p.Description,
+			OriginKey:   p.OriginKey,
+			ContentType: p.ContentType,
+			Bytes:       p.Bytes,
+			CreatedAt:   p.CreatedAt,
+		}
+		toJSON(w, http.StatusOK, out)
+	}
+}

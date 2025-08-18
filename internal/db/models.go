@@ -28,11 +28,11 @@ type Photo struct {
 }
 
 type Album struct {
-	ID          string `gorm:"primaryKey;type:text"`
-	OwnerID     string `gorm:"index;not null"`
-	Title       string `gorm:"type:text;not null"`
-	Description string `gorm:"type:text"`
-	CreatedAt   time.Time
+	ID          string    `gorm:"primaryKey;type:text"`
+	OwnerID     string    `gorm:"index;not null"`
+	Title       string    `gorm:"type:text;not null"`
+	Description string    `gorm:"type:text"`
+	CreatedAt   time.Time `gorm:"index"`
 
 	Owner  User    `gorm:"constraint:OnDelete:CASCADE;foreignKey:OwnerID;references:ID"`
 	Photos []Photo `gorm:"many2many:album_photos"`

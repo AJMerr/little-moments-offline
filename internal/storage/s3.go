@@ -67,3 +67,7 @@ func (s *S3) PresignPut(ctx context.Context, bucket, key, contentType string, ex
 	}
 	return out.URL, map[string]string{"Content-Type": contentType}, nil
 }
+
+func (s *S3) Head(ctx context.Context, bucket, key string) (*s3.HeadObjectOutput, error) {
+	return s.raw.HeadObject(ctx, &s3.HeadObjectInput{Bucket: &bucket, Key: &key})
+}

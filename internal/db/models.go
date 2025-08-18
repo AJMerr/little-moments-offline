@@ -18,7 +18,7 @@ type Photo struct {
 	OwnerID     string `gorm:"index;not null"`
 	Title       string `gorm:"type:text;not null"`
 	Description string `gorm:"type:text"`
-	OriginKey   string `gorm:"not null"`
+	OriginKey   string `gorm:"not null;uniqueIndex"`
 	ContentType string `gorm:"not null"`
 	Bytes       int64  `gorm:"not null"`
 	CreatedAt   time.Time

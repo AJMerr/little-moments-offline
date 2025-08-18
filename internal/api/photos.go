@@ -69,9 +69,9 @@ func PresignPhoto(s3 *storage.S3) http.HandlerFunc {
 }
 
 type confirmReq struct {
-	Key         string `json:"string"`
+	Key         string `json:"key"`
 	Bytes       int64  `json:"bytes"`
-	ContentType string `json:"content-type"`
+	ContentType string `json:"content_type"`
 	Title       string `json:"title,omitempty"`
 	Description string `json:"description,omitempty"`
 }

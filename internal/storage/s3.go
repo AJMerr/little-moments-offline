@@ -68,6 +68,29 @@ func (s *S3) PresignPut(ctx context.Context, bucket, key, contentType string, ex
 	return out.URL, map[string]string{"Content-Type": contentType}, nil
 }
 
+// Confirms an object exists in MinIO
 func (s *S3) Head(ctx context.Context, bucket, key string) (*s3.HeadObjectOutput, error) {
 	return s.raw.HeadObject(ctx, &s3.HeadObjectInput{Bucket: &bucket, Key: &key})
+}
+
+// Funtion returns a time limited URL to read an object
+func (s *S3) PresignGetObject(ctx context.Context, bucket, key string, ttl time.Duration) (string, error) {
+	p := s3.NewPresignClient(s.raw)
+	out, err := p.PresignGetObject(ctx, &s3.GetObjectInput{
+		Bucket: &bucket,
+		Key:    &key,
+	}, func(o *s3.PresignOptions) { o.Expires = ttl })
+	if err != nil {
+		return "", nil
+	}
+	return out.URL, nil
+}
+
+// Function to delete a photo by ID
+func (s *S3) DeleteObject(ctx context.Context, bucket, key string) error {
+	_, err := s.raw.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: &bucket,
+		Key:    &key,
+	})
+	return err
 }

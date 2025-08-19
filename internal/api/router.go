@@ -15,6 +15,7 @@ func RouterHandler(gdb *gorm.DB, s3 *storage.S3) http.Handler {
 	mux.HandleFunc("GET /panic", func(w http.ResponseWriter, r *http.Request) { panic("AAAAAAHHH BEES") })
 	mux.HandleFunc("GET /photos", GetAllPhotos(gdb))
 	mux.HandleFunc("GET /photos/{id}", GetPhotoByID(gdb))
+	mux.HandleFunc("GET /photos/{id}/url", GetPhotoUrl(gdb, s3))
 	mux.HandleFunc("POST /photos/presign", PresignPhoto(s3))
 	mux.HandleFunc("POST /photos/confirm", ConfirmPhoto(gdb, s3))
 	return reqID(logger(panicRecovery(mux)))

@@ -85,3 +85,12 @@ func (s *S3) PresignGetObject(ctx context.Context, bucket, key string, ttl time.
 	}
 	return out.URL, nil
 }
+
+// Function to delete a photo by ID
+func (s *S3) DeleteObject(ctx context.Context, bucket, key string) error {
+	_, err := s.raw.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: &bucket,
+		Key:    &key,
+	})
+	return err
+}

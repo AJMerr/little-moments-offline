@@ -53,6 +53,13 @@ func main() {
 		log.Printf("WARN (%s): %v", s3Config.BucketPhotos, s3Err)
 	}
 
+	// Ensures bucket exists
+	if bucketErr := s3c.EnsureBucket(ctx, os.Getenv("LM_S3_BUCKET_PHOTOS")); bucketErr != nil {
+		log.Fatalf("ensure bucket %v", bucketErr)
+	}
+
+	_ = s3c.SetBucketCORS(ctx, os.Getenv("LM_S3_BUCKET_PHOTOS"))
+
 	// Sets a var for the Router
 	router := api.RouterHandler(gdb, s3c)
 

@@ -2,12 +2,15 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/aws/smithy-go"
 )
 
 type S3Config struct {
@@ -56,6 +59,61 @@ func (s *S3) Health(ctx context.Context) error {
 	return err
 }
 
+// Checks if a bucket exists, if not creates it
+func (s *S3) EnsureBucket(ctx context.Context, bucket string) error {
+	if bucket == "" {
+		return nil
+	}
+
+	if _, err := s.raw.HeadBucket(ctx, &s3.HeadBucketInput{Bucket: &bucket}); err == nil {
+		return nil
+	}
+
+	// Creates bucket if bucket doesn't exist
+	in := &s3.CreateBucketInput{Bucket: &bucket}
+	if s.Config.Region != "" && s.Config.Region != "us-east-1" {
+		in.CreateBucketConfiguration = &types.CreateBucketConfiguration{
+			LocationConstraint: types.BucketLocationConstraint(s.Config.Region),
+		}
+	}
+
+	_, err := s.raw.CreateBucket(ctx, in)
+	if err == nil {
+		return nil
+	}
+
+	// Treats already exists as success
+	var ae smithy.APIError
+	if errors.As(err, &ae) {
+		code := ae.ErrorCode()
+		if code == "BucketAlreadyOwnedByYou" || code == "BucketAlreadyExists" {
+			return nil
+		}
+	}
+	return err
+}
+
+// Sets bucket CORS
+func (s *S3) SetBucketCORS(ctx context.Context, bucket string) error {
+	if bucket == "" {
+		return nil
+	}
+	cfg := &types.CORSConfiguration{
+		CORSRules: []types.CORSRule{{
+			AllowedMethods: []string{"GET, PUT"},
+			AllowedHeaders: []string{""},
+			AllowedOrigins: []string{""},
+			ExposeHeaders:  []string{"ETag"},
+			MaxAgeSeconds:  aws.Int32(3000),
+		}},
+	}
+	_, err := s.raw.PutBucketCors(ctx, &s3.PutBucketCorsInput{
+		Bucket:            &bucket,
+		CORSConfiguration: cfg,
+	})
+	return err
+}
+
 func (s *S3) PresignPut(ctx context.Context, bucket, key, contentType string, expires time.Duration) (string, map[string]string, error) {
 	out, err := s.presign.PresignPutObject(ctx, &s3.PutObjectInput{
 		Bucket:      &bucket,
@@ -81,12 +139,12 @@ func (s *S3) PresignGetObject(ctx context.Context, bucket, key string, ttl time.
 		Key:    &key,
 	}, func(o *s3.PresignOptions) { o.Expires = ttl })
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 	return out.URL, nil
 }
 
-// Function to delete a photo by ID
+// Function to delete an object from storage
 func (s *S3) DeleteObject(ctx context.Context, bucket, key string) error {
 	_, err := s.raw.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: &bucket,

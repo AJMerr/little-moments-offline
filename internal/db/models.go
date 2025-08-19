@@ -2,6 +2,8 @@ package db
 
 import (
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type User struct {
@@ -22,6 +24,7 @@ type Photo struct {
 	ContentType string `gorm:"not null"`
 	Bytes       int64  `gorm:"not null"`
 	CreatedAt   time.Time
+	DeletedAt   gorm.DeletedAt
 
 	Owner  User    `gorm:"constraint:OnDelete:CASCADE;foreignKey:OwnerID;references:ID"`
 	Albums []Album `gorm:"many2many:album_photos"`

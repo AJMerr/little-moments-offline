@@ -1,16 +1,17 @@
 #--- Build Stage ---
-FROM golang:1.24.6 AS build
-WORKDIR /src
+FROM golang:1.24.6-alpine AS build
+WORKDIR /app
+RUN apk add --no-cache build-base
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /out/api ./cmd/api
+RUN go build -o /bin/api ./cmd/api
 
 #---Runtime Stage---
-FROM gcr.io/distroless/static:nonroot
+FROM alpine:3.20
+RUN adduser -D -H -u 10001 app
 WORKDIR /app
-COPY --from=build /out/api /app/api
-USER nonroot:nonroot
-VOLUME [ "/app/data" ]
+COPY --from=build /bin/api /usr/local/bin/api
 EXPOSE 8173
-ENTRYPOINT ["/app/api"]
+USER app
+CMD [ "api" ]

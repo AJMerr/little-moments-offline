@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import {
   listPhotos,
   presign,
-  uploadToS3,
+  uploadToS3Proxy,
+  type PresignRes,
   confirmPhoto,
   photoUrl,
   patchPhoto,
@@ -76,21 +77,24 @@ export default function App() {
     }
   }
 
-  async function onUpload() {
-    if (!file) return;
-    try {
-      setBusy(true);
-      const pre = await presign(file.name, file.type);
-      await uploadToS3(pre.url, file, pre.headers["Content-Type"]);
-      const meta = await confirmPhoto(pre.key, file.size, file.type, title || file.name);
-      setItems((cur) => [{ ...meta }, ...cur]);
-      setFile(null); setTitle("");
-    } catch (e: any) {
-      alert(e?.message || "upload failed");
-    } finally {
-      setBusy(false);
-    }
+async function onUpload() {
+  if (!file) return;
+  try {
+    setBusy(true);
+
+    const pre = await presign(file.name, file.type);   // {url, key, headers}
+    await uploadToS3Proxy(pre.url, file);               // PUT via /s3/* proxy
+    const meta = await confirmPhoto(pre.key, file.size, file.type, title || file.name);
+
+    setItems(cur => [meta, ...cur]);
+    setFile(null); setTitle("");
+  } catch (e: any) {
+    alert(e?.message || "upload failed");
+  } finally {
+    setBusy(false);
   }
+}
+
 
   async function onDelete(id: string) {
     if (!window.confirm("Delete this photo?")) return;

@@ -13,6 +13,12 @@ export type Photo = {
   created_at: string;
 };
 
+export type PresignRes = {
+  url: string;                 // presigned URL from /photos/presign
+  key: string;                 // object key (you already use this in confirm)
+  headers?: Record<string, string>; // e.g. { "Content-Type": "image/jpeg" }
+};
+
 export async function listPhotos(cursor?: string, limit = 24) {
   const params: any = { limit };
   if (cursor) params.cursor = cursor;
@@ -43,16 +49,27 @@ export async function confirmPhoto(
   return data as Photo;
 }
 
+function toS3Proxy(url: string) {
+  const u = new URL(url);
+  return `${window.location.origin}/s3${u.pathname}${u.search}`;
+}
+
 export async function photoUrl(id: string) {
-  const { data } = await http.get(`/photos/${id}/url`, { params: { ttl: 300 } });
-  return data as { url: string; expires_at: string };
+  const { data } = await http.get<{ url: string; expires_at: string }>(
+    `/photos/${id}/url`,
+    { params: { ttl: 300 } }
+  );
+  return {
+    url: toS3Proxy(data.url),   
+    expires_at: data.expires_at 
+  };
 }
 
 export async function patchPhoto(
   id: string,
   patch: { title?: string; description?: string }
 ) {
-  const { data } = await http.patch(`/photos/${id}`, patch);
+  const { data } = await http.patch(`/photos/${id}`, patch); 
   return data as Photo;
 }
 
@@ -66,3 +83,12 @@ export async function uploadToS3(url: string, file: File, contentType: string) {
     headers: { "Content-Type": contentType },
   });
 }
+
+// api.ts
+export async function uploadToS3Proxy(presignedUrl: string, file: File) {
+  const u = new URL(presignedUrl);
+  const proxied = `${window.location.origin}/s3${u.pathname}${u.search}`;
+  const ct = file.type || 'application/octet-stream';
+  await fetch(proxied, { method: 'PUT', headers: { 'Content-Type': ct }, body: file });
+}
+

@@ -1,0 +1,22 @@
+:80 {
+  encode zstd gzip
+  root * /srv
+
+  handle_path /api/* {
+    reverse_proxy http://littlemoments:8173 {
+	header_up Host {upstream_hostport}
+	}
+  }
+
+  handle_path /s3/* {
+    uri strip_prefix /s3
+    reverse_proxy http://minio:9000 {
+		header_up Host {upstream_hostport}
+	}
+  }
+
+  handle {
+    try_files {path} /index.html
+    file_server
+  }
+}

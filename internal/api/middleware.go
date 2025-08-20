@@ -137,3 +137,49 @@ func panicRecovery(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+// CORS Middleware for the front end
+var allowedOrigins = map[string]struct{}{
+	"http://localhost:5173": {},
+	"http://127.0.0.1:5173": {},
+}
+
+// Adds headers and short circuits preflight
+func cors(next http.Handler) http.Handler {
+	allowedMethods := "GET,POST,PATCH,DELETE,OPTIONS"
+	allowedHeaders := "Content-Type, Authorization, X-Request-ID"
+	exposeHeader := "ETag, X-Request-ID"
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+
+		w.Header().Add("Vary", "Origin")
+		w.Header().Add("Vary", "Access-Control-Request-Method")
+		w.Header().Add("Vary", "Access-Control-Request-Headers")
+
+		// If req has an origin and is allowed, set CORS header
+		if origin != "" {
+			if _, ok := allowedOrigins[origin]; ok {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Access-Control-Expose-Header", exposeHeader)
+			}
+		}
+
+		// Preflight
+		if r.Method == http.MethodOptions {
+			// Only answer preflight for allowed origins
+			if origin != "" {
+				if _, ok := allowedOrigins[origin]; ok {
+					w.Header().Set("Access-Control-Allow-Methods", allowedMethods)
+					w.Header().Set("Access-Control-Allow-Headers", allowedHeaders)
+					w.Header().Set("Access-Control-Max-Age", "300")
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+			}
+			w.WriteHeader(http.StatusNoContent)
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}

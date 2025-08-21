@@ -31,7 +31,7 @@ services:
       LM_S3_PUBLIC_BASE: http://localhost:9000
       LM_WEB_ORIGINS: http://localhost:8080
     volumes:
-      - ./data:/app/data             
+      - app_data:/app/data             
     depends_on:
       - minio
 
@@ -48,4 +48,5 @@ services:
       - minio_data:/data
 
 volumes:
+  app_data:
   minio_data:

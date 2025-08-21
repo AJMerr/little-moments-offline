@@ -9,6 +9,7 @@ services:
       - "8080:80"                    
     depends_on:
       - api
+      - minio
 
   api:
     build:
@@ -29,7 +30,7 @@ services:
       LM_S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       LM_S3_BUCKET_PHOTOS: photos
       LM_S3_PUBLIC_BASE: http://localhost:9000
-      LM_WEB_ORIGINS: http://localhost:8080
+      LM_WEB_ORIGINS: http://localhost:8080,http://littlemoments:8080
     volumes:
       - app_data:/app/data             
     depends_on:

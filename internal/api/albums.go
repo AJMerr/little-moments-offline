@@ -215,7 +215,7 @@ func GetAllAlbums(gdb *gorm.DB) http.HandlerFunc {
 		ctx := r.Context()
 		var rows []db.Album
 		q := gdb.WithContext(ctx).
-			Where("owner_id = ? AND delete_at IS NULL", localuser).
+			Where("owner_id = ? AND deleted_at IS NULL", localuser).
 			Order("created_at DESC, id DESC")
 
 		if after != nil {

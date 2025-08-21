@@ -26,6 +26,11 @@ func main() {
 		log.Fatalf("migrate: %v", dbErr)
 	}
 
+	// Creates a local_user if not already created
+	if dbErr := db.SeedLocalUser(gdb); dbErr != nil {
+		log.Fatalf("seed: %v", dbErr)
+	}
+
 	// Loads .env
 	_ = godotenv.Load()
 

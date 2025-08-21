@@ -10,8 +10,6 @@ A privacy first, self hosted photo sharing app. This aims to have a 1:1 experien
 -  Edit (title/description), delete, and view via **presigned GET**
 -  Local-first—SQLite + MinIO volumes on your machine
 
----
-
 ## The Why
 ### For you
 - Own your data: We fall into the habit of trusting third party cloud providers with our sensative information. This is especially true with photos. 
@@ -19,8 +17,6 @@ A privacy first, self hosted photo sharing app. This aims to have a 1:1 experien
 
 ### For me
 - This is my journey: For years I've wanted to create something beautiful that really sucked me in and ignited the fire I knew I've always had. This project, both the cloud, and now this offline version, has helped me grow as developer tremendously. This is my capstone, and hopefully the project that finally lands me a job in dev after 6 years of trying (sometimes off and on)
-
----
 
 ## Quick Start (Docker)
 
@@ -54,8 +50,6 @@ open http://littlemoments:8080
 - API (direct) ```http://localhost:8173```
 - MinIO Console: ```http://localhost:9001``` (use env credentials)
 
----
-
 ## Environment Variables
 | Var                   | Required | Example                 | Notes                                      |
 | --------------------- | -------- | ----------------------- | ------------------------------------------ |
@@ -70,8 +64,6 @@ open http://littlemoments:8080
 | Var             | Required | Example | Notes                                |
 | --------------- | -------- | ------- | ------------------------------------ |
 | `VITE_API_BASE` | ✅        | `/api`  | Caddy proxies `/api` → API container |
-
----
 
 ## Upload flow
 Uploads are a multi-step process as presigned URLs are used for improved security
@@ -98,8 +90,6 @@ POST /api/photos/confirm
   "title": "Banana"
 }
 ```
-
----
 
 ## API Overview
 Base Path: /api

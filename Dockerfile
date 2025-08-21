@@ -10,8 +10,8 @@ RUN go build -o /bin/api ./cmd/api
 #---Runtime Stage---
 FROM alpine:3.20
 RUN adduser -D -H -u 10001 app
-RUN mkdir -p /app/data
 WORKDIR /app
+RUN mkdir -p /app/data && chown -R app:app /app
 COPY --from=build /bin/api /usr/local/bin/api
 EXPOSE 8173
 USER app

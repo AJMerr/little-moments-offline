@@ -300,6 +300,14 @@ func GetAlbumByID(gdb *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		album := albumOut{
+			ID:           a.ID,
+			Title:        a.Title,
+			Description:  a.Description,
+			CoverPhotoID: a.CoverPhotoID,
+			CreatedAt:    a.CreatedAt,
+		}
+
 		// Pagination params for photos
 		limit := 24
 		if s := r.URL.Query().Get("limit"); s != "" {
@@ -339,7 +347,7 @@ func GetAlbumByID(gdb *gorm.DB) http.HandlerFunc {
 			)
 		}
 
-		if err := q.Limit(limit).Scan(&rows).Error; err != nil {
+		if err := q.Limit(limit + 1).Scan(&rows).Error; err != nil {
 			writeError(w, http.StatusInternalServerError, "db_list_failed")
 			return
 		}
@@ -364,13 +372,9 @@ func GetAlbumByID(gdb *gorm.DB) http.HandlerFunc {
 		}
 
 		toJSON(w, http.StatusOK, map[string]any{
-			"id":             a.ID,
-			"title":          a.Title,
-			"description":    a.Description,
-			"cover_photo_id": a.CoverPhotoID,
-			"created_at":     a.CreatedAt,
-			"photos":         photos,
-			"next_cursor":    next,
+			"album":       album,
+			"photos":      photos,
+			"next_cursor": next,
 		})
 	}
 }

@@ -131,6 +131,58 @@ func CreateAblum(gdb *gorm.DB) http.HandlerFunc {
 	}
 }
 
+type addPhotosReq struct {
+	PhotoIDs []string `json:"photo_ids"`
+}
+
+// Adds a photo to the album
+func AddPhotoToAlbum(gdb *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
+			writeError(w, http.StatusBadRequest, "method_not_allowed")
+			return
+		}
+		id, ok := pathAlbumPhotos(r)
+		if !ok {
+			writeError(w, http.StatusBadRequest, "bad_path")
+			return
+		}
+
+		// Checks if album exists
+		var exists int64
+		if err := gdb.Table("albums").
+			Where("id = ? AND owner_id = ? AND deleted_at IS NULL", id, localuser).
+			Count(&exists).Error; err != nil || exists == 0 {
+			writeError(w, http.StatusBadRequest, "album_not_found")
+			return
+		}
+
+		var req addPhotosReq
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			writeError(w, http.StatusBadRequest, "bad_json")
+			return
+		}
+		if len(req.PhotoIDs) == 0 {
+			toJSON(w, http.StatusOK, map[string]any{"added": 0})
+			return
+		}
+
+		now := time.Now()
+		vals := make([]map[string]any, 0, len(req.PhotoIDs))
+		for _, pid := range req.PhotoIDs {
+			vals = append(vals, map[string]any{
+				"album_id": id, "photo_id": pid, "added_at": now,
+			})
+		}
+		if err := gdb.Table("album_photos").Clauses(clause.OnConflict{DoNothing: true}).Create(&vals).Error; err != nil {
+			writeError(w, http.StatusInternalServerError, "db_insert_failed")
+			return
+		}
+		toJSON(w, http.StatusOK, map[string]any{"added": len(vals)})
+	}
+}
+
 // Sets up GET requests with simple cursor helpers
 const localuser = "local_user" // DELETE, use auth user later
 

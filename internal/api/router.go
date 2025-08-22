@@ -19,6 +19,8 @@ func RouterHandler(gdb *gorm.DB, s3 *storage.S3) http.Handler {
 	mux.HandleFunc("GET /albums", GetAllAlbums(gdb))
 	mux.HandleFunc("GET /albums/{id}", GetAlbumByID(gdb))
 	mux.HandleFunc("DELETE /photos/{id}", DeletePhotoByID(gdb, s3))
+	mux.HandleFunc("DELETE /albums/{id}", DeleteAlbum(gdb))
+	mux.HandleFunc("DELETE /albums/{id}/photos", DeletePhotoFromAlbum(gdb))
 	mux.HandleFunc("POST /photos/presign", PresignPhoto(s3))
 	mux.HandleFunc("POST /photos/confirm", ConfirmPhoto(gdb, s3))
 	mux.HandleFunc("POST /albums", CreateAblum(gdb))

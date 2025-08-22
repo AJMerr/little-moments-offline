@@ -31,18 +31,28 @@ type Photo struct {
 }
 
 type Album struct {
-	ID          string    `gorm:"primaryKey;type:text"`
-	OwnerID     string    `gorm:"index;not null"`
-	Title       string    `gorm:"type:text;not null"`
-	Description string    `gorm:"type:text"`
-	CreatedAt   time.Time `gorm:"index"`
+	ID           string    `gorm:"primaryKey;type:text"`
+	OwnerID      string    `gorm:"index;not null"`
+	Title        string    `gorm:"type:text;not null"`
+	Description  string    `gorm:"type:text"`
+	CoverPhotoID *string   `gorm:"index"`
+	CreatedAt    time.Time `gorm:"index"`
+	UpdatedAt    time.Time
+	DeletedAt    gorm.DeletedAt
 
-	Owner  User    `gorm:"constraint:OnDelete:CASCADE;foreignKey:OwnerID;references:ID"`
+	// TODO: Re-enable this when I have Auth
+	// Owner  User    `gorm:"constraint:OnDelete:CASCADE;foreignKey:OwnerID;references:ID"`
 	Photos []Photo `gorm:"many2many:album_photos"`
 }
 
 type AlbumPhoto struct {
 	AlbumID string    `gorm:"primaryKey;type:text;index"`
 	PhotoID string    `gorm:"primaryKey;type:text;index"`
+	Pos     int       `gorm:"default:0;index"`
 	AddedAt time.Time `gorm:"not null;index"`
+
+	Album Album `gorm:"constraint:OnDelete:CASCADE,OnUpdate:CASCADE;foreignKey:AlbumID;references:ID"`
+	Photo Photo `gorm:"constraint:OnDelete:CASCADE,OnUpdate:CASCADE;foreignKey:PhotoID;references:ID"`
 }
+
+func (AlbumPhoto) TableName() string { return "album_photos" }

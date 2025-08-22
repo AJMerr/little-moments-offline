@@ -24,6 +24,7 @@ func RouterHandler(gdb *gorm.DB, s3 *storage.S3) http.Handler {
 	mux.HandleFunc("POST /photos/presign", PresignPhoto(s3))
 	mux.HandleFunc("POST /photos/confirm", ConfirmPhoto(gdb, s3))
 	mux.HandleFunc("POST /albums", CreateAblum(gdb))
+	mux.HandleFunc("POST /albums/{id}/photos", AddPhotoToAlbum(gdb))
 	mux.HandleFunc("PATCH /photos/{id}", UpdatePhoto(gdb))
 	mux.HandleFunc("PATCH /albums/{id}", UpdateAlbum(gdb))
 	return reqID(logger(panicRecovery(cors(mux))))

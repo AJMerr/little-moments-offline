@@ -60,6 +60,17 @@ export default function Albums() {
   const [nextAlbums, setNextAlbums] = useState<string>("");
   const [loadingList, setLoadingList] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [showCreateForm, setShowCreateForm] = useState(false);
+
+  // Reset form when hiding
+  const toggleCreateForm = () => {
+    if (showCreateForm) {
+      setNewTitle("");
+      setNewDescription("");
+    }
+    setShowCreateForm(!showCreateForm);
+  };
 
   // detail view
   const [openId, setOpenId] = useState<string | null>(null);
@@ -130,9 +141,13 @@ export default function Albums() {
   async function onCreateAlbum() {
     if (!newTitle.trim()) return;
     try {
-      const album = await createAlbum({ title: newTitle.trim() });
+      const album = await createAlbum({ 
+        title: newTitle.trim(),
+        description: newDescription.trim() || undefined
+      });
       setAlbums((cur) => [album, ...cur]);
       setNewTitle("");
+      setNewDescription("");
     } catch (e: any) {
       alert("Failed to create album: " + e?.message);
     }
@@ -281,31 +296,59 @@ export default function Albums() {
   if (!openId) {
     return (
       <>
+        {/* Header with Toggle Button */}
+        <div className="flex items-center justify-center mb-8">
+          <button
+            onClick={toggleCreateForm}
+            className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-purple-500/25"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            {showCreateForm ? 'Hide Create Album' : 'Create Album'}
+          </button>
+        </div>
+
         {/* Create Album Section */}
-        <div className="bg-black/40 border border-gray-800 rounded-2xl p-6 mb-8 backdrop-blur-sm">
-          <div className="flex flex-col sm:flex-row gap-4 items-center">
-            <div className="flex-1 w-full">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Album Title</label>
-              <input
-                type="text"
-                placeholder="Enter album title..."
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
-                onKeyDown={(e) => e.key === "Enter" && onCreateAlbum()}
-              />
-            </div>
-            <div className="w-full sm:w-auto">
-              <button
-                disabled={!newTitle.trim()}
-                onClick={onCreateAlbum}
-                className="w-full sm:w-auto px-8 py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-purple-500/25 disabled:shadow-none"
-              >
-                Create Album
-              </button>
+                {showCreateForm && (
+          <div className="bg-black/40 border border-gray-800 rounded-2xl p-6 mb-8 backdrop-blur-sm">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="w-full min-w-0">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Album Title</label>
+                  <input
+                    type="text"
+                    placeholder="Enter album title..."
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
+                    onKeyDown={(e) => e.key === "Enter" && onCreateAlbum()}
+                  />
+                </div>
+                <div className="w-full min-w-0 flex flex-col justify-end">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Description (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="Enter album description..."
+                    value={newDescription}
+                    onChange={(e) => setNewDescription(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end">
+                <button
+                  disabled={!newTitle.trim()}
+                  onClick={onCreateAlbum}
+                  className="px-8 py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-purple-500/25 disabled:shadow-none"
+                >
+                  Create Album
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Albums Grid */}
         {loadingList && albums.length === 0 && (

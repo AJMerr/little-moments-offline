@@ -84,6 +84,11 @@ export default function Albums() {
     albumIdRef.current = detail?.id ?? openId ?? "";
   }, [detail, openId]);
 
+  // Debug: log when albums state changes
+  useEffect(() => {
+    console.log("Albums state changed:", albums);
+  }, [albums]);
+
   function requireAlbumId(): string {
     const id = albumIdRef.current;
     if (!id) throw new Error("Album not loaded yet");
@@ -168,12 +173,18 @@ export default function Albums() {
     if (!detail) return;
     try {
       setSavingMeta(true);
-      const updated = await patchAlbum(detail.id, {
+      const updated = await patchAlbum(requireAlbumId(), {
         title: detail.title,
         description: detail.description,
         cover_photo_id: detail.cover_photo_id,
       });
+      
+      // Update both the detail view and the albums list
       setDetail((cur) => cur ? { ...cur, ...updated } : null);
+      setAlbums((cur) => cur.map((album) => 
+        album.id === updated.id ? { ...album, ...updated } : album
+      ));
+      
     } catch (e: any) {
       alert("Failed to update album: " + e?.message);
     } finally {
@@ -184,11 +195,23 @@ export default function Albums() {
   // delete album
   async function onDeleteAlbum() {
     if (!detail || !window.confirm("Delete this album?")) return;
+    
+    // Debug logging to see what's happening
+    console.log("Delete album - detail:", detail);
+    console.log("Delete album - detail.id:", detail.id);
+    console.log("Delete album - openId:", openId);
+    console.log("Delete album - albumIdRef.current:", albumIdRef.current);
+    
     try {
-      await deleteAlbum(detail.id);
-      setAlbums((cur) => cur.filter((a) => a.id !== detail.id));
+      // Use the same pattern as other working functions
+      const albumId = requireAlbumId();
+      console.log("Delete album - using albumId:", albumId);
+      
+      await deleteAlbum(albumId);
+      setAlbums((cur) => cur.filter((a) => a.id !== albumId));
       onCloseAlbum();
     } catch (e: any) {
+      console.error("Delete album error:", e);
       alert("Failed to delete album: " + e?.message);
     }
   }
@@ -233,7 +256,22 @@ export default function Albums() {
   async function onSetCover(photoId: string) {
     try {
       const updated = await patchAlbum(requireAlbumId(), { cover_photo_id: photoId });
+      
+      console.log("Setting cover photo - updated album:", updated);
+      console.log("Setting cover photo - cover_photo_id:", updated.cover_photo_id);
+      
+      // Update both the detail view and the albums list
       setDetail((cur) => cur ? { ...cur, ...updated } : null);
+      
+      // Force a more explicit update of the albums list
+      setAlbums((cur) => {
+        const newAlbums = cur.map((album) => 
+          album.id === updated.id ? { ...album, ...updated } : album
+        );
+        console.log("Setting cover photo - new albums:", newAlbums);
+        return newAlbums;
+      });
+      
     } catch (e: any) {
       alert("Failed to set cover photo: " + e?.message);
     }

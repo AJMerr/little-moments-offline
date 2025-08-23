@@ -22,7 +22,7 @@ A privacy first, self hosted photo sharing app. This aims to have a 1:1 experien
 
 ```bash
 # 1) Clone
-git clone https://github.com/<you>/little-moments-offline.git
+git clone https://github.com/ajmerr/little-moments-offline.git
 cd little-moments-offline
 
 # 2) Create env files from examples

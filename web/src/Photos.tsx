@@ -24,7 +24,8 @@ export default function Photos() {
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const [sel, setSel] = useState<WithUrl | null>(null);
+  const [viewPhoto, setViewPhoto] = useState<WithUrl | null>(null);
+  const [editPhoto, setEditPhoto] = useState<WithUrl | null>(null);
 
   // load first page
   useEffect(() => {
@@ -109,16 +110,16 @@ export default function Photos() {
     }
   }
 
-  async function onSaveSel() {
-    if (!sel) return;
+  async function onSaveEdit() {
+    if (!editPhoto) return;
     try {
       setBusy(true);
-      const updated = await patchPhoto(sel.id, {
-        title: sel.title,
-        description: sel.description,
+      const updated = await patchPhoto(editPhoto.id, {
+        title: editPhoto.title,
+        description: editPhoto.description,
       });
-      setItems((cur) => cur.map((p) => (p.id === sel.id ? { ...p, ...updated } : p)));
-      setSel(null);
+      setItems((cur) => cur.map((p) => (p.id === editPhoto.id ? { ...p, ...updated } : p)));
+      setEditPhoto(null);
     } catch {
       alert("update failed");
     } finally {
@@ -130,7 +131,7 @@ export default function Photos() {
     () =>
       items.map((p) => (
         <div key={p.id} className="group bg-black/40 border border-gray-800 rounded-2xl overflow-hidden transition-all duration-300 hover:border-purple-500/50 hover:shadow-2xl hover:shadow-purple-500/10 hover:scale-[1.02]">
-          <button className="block w-full bg-black/50 relative overflow-hidden" onClick={() => setSel(p)}>
+          <button className="block w-full bg-black/50 relative overflow-hidden" onClick={() => setViewPhoto(p)}>
             {p._url ? (
               <img
                 src={p._url}
@@ -148,7 +149,7 @@ export default function Photos() {
                   className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors duration-200 shadow-lg"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setSel(p);
+                    setEditPhoto(p);
                   }}
                 >
                   Edit
@@ -285,11 +286,77 @@ export default function Photos() {
         </div>
       )}
 
+      {/* Photo View Modal */}
+      {viewPhoto && (
+        <div
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          onClick={() => setViewPhoto(null)}
+        >
+          <div
+            className="bg-black border border-gray-800 rounded-2xl w-full max-w-7xl max-h-[95vh] overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-800 flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-100">{viewPhoto.title || "Untitled"}</h3>
+                {viewPhoto.description && (
+                  <p className="text-gray-400 mt-1">{viewPhoto.description}</p>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setEditPhoto(viewPhoto);
+                    setViewPhoto(null);
+                  }}
+                  className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors duration-200"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => setViewPhoto(null)}
+                  className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-200 font-medium rounded-lg transition-colors duration-200"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 flex items-center justify-center">
+              {viewPhoto._url && (
+                <img
+                  src={viewPhoto._url}
+                  alt={viewPhoto.title || "photo"}
+                  className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                />
+              )}
+            </div>
+            
+            <div className="p-6 border-t border-gray-800 bg-gray-900/30">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-400">
+                <div>
+                  <span className="font-medium text-gray-300">Uploaded:</span>
+                  <span className="ml-2">{new Date(viewPhoto.created_at).toLocaleDateString()}</span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-300">File Size:</span>
+                  <span className="ml-2">{(viewPhoto.bytes / 1024 / 1024).toFixed(1)} MB</span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-300">Type:</span>
+                  <span className="ml-2">{viewPhoto.content_type}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Photo Edit Modal */}
-      {sel && (
+      {editPhoto && (
         <div
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-          onClick={() => setSel(null)}
+          onClick={() => setEditPhoto(null)}
         >
           <div
             className="bg-black border border-gray-800 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl"
@@ -298,10 +365,10 @@ export default function Photos() {
             <div className="grid lg:grid-cols-2 gap-0">
               {/* Image Preview */}
               <div className="bg-black p-6 flex items-center justify-center">
-                {sel._url && (
+                {editPhoto._url && (
                   <img
-                    src={sel._url}
-                    alt={sel.title}
+                    src={editPhoto._url}
+                    alt={editPhoto.title}
                     className="max-w-full max-h-[70vh] object-contain rounded-lg"
                   />
                 )}
@@ -320,8 +387,8 @@ export default function Photos() {
                       Title
                     </label>
                     <input
-                      value={sel.title || ""}
-                      onChange={(e) => setSel({ ...sel, title: e.target.value })}
+                      value={editPhoto.title || ""}
+                      onChange={(e) => setEditPhoto({ ...editPhoto, title: e.target.value })}
                       className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
                       placeholder="Enter photo title..."
                     />
@@ -333,8 +400,8 @@ export default function Photos() {
                     </label>
                     <textarea
                       rows={4}
-                      value={sel.description || ""}
-                      onChange={(e) => setSel({ ...sel, description: e.target.value })}
+                      value={editPhoto.description || ""}
+                      onChange={(e) => setEditPhoto({ ...editPhoto, description: e.target.value })}
                       className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 resize-none"
                       placeholder="Add a description..."
                     />
@@ -343,7 +410,7 @@ export default function Photos() {
                   <div className="flex items-center gap-3 pt-4">
                     <button
                       className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-200 font-medium rounded-lg transition-colors duration-200"
-                      onClick={() => setSel(null)}
+                      onClick={() => setEditPhoto(null)}
                     >
                       Cancel
                     </button>
@@ -351,7 +418,7 @@ export default function Photos() {
                     <button
                       disabled={busy}
                       className="px-6 py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all duration-200"
-                      onClick={onSaveSel}
+                      onClick={onSaveEdit}
                     >
                       {busy ? (
                         <div className="flex items-center gap-2">

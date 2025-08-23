@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   listPhotos,
   presign,
-  uploadToS3Proxy,
+  uploadToS3,
   type PresignRes,
   confirmPhoto,
   photoUrl,
@@ -86,8 +86,8 @@ export default function Photos() {
       setBusy(true);
 
       const pre: PresignRes = await presign(file.name, file.type);   
-      await uploadToS3Proxy(pre.url, file);                          
-      const meta = await confirmPhoto(pre.key, file.size, file.type, title || file.name);
+              await uploadToS3(pre.url, file);                          
+              const meta = await confirmPhoto(pre.key, file.size, file.type, title || file.name, description);
 
       setItems(cur => [meta, ...cur]);
       setFile(null);

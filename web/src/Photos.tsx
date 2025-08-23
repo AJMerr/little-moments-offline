@@ -129,35 +129,55 @@ export default function Photos() {
   const grid = useMemo(
     () =>
       items.map((p) => (
-        <div key={p.id} className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
-          <button className="block w-full bg-black/50" onClick={() => setSel(p)}>
+        <div key={p.id} className="group bg-black/40 border border-gray-800 rounded-2xl overflow-hidden transition-all duration-300 hover:border-purple-500/50 hover:shadow-2xl hover:shadow-purple-500/10 hover:scale-[1.02]">
+          <button className="block w-full bg-black/50 relative overflow-hidden" onClick={() => setSel(p)}>
             {p._url ? (
               <img
                 src={p._url}
                 alt={p.title || "photo"}
-                className="w-full h-56 object-cover"
+                className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
               />
             ) : (
-              <div className="w-full h-56 animate-pulse bg-neutral-800" />
+              <div className="w-full h-64 animate-pulse bg-gray-800" />
             )}
+            {/* Overlay with actions */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+              <div className="flex gap-2">
+                <button
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors duration-200 shadow-lg"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSel(p);
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors duration-200 shadow-lg"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(p.id);
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
           </button>
-          <div className="p-3 flex items-center gap-2">
-            <div className="truncate text-sm flex-1" title={p.title || "Untitled"}>
+          <div className="p-4">
+            <div className="text-sm font-medium text-gray-200 mb-2 truncate" title={p.title || "Untitled"}>
               {p.title || "Untitled"}
             </div>
-            <button
-              className="px-2 py-1 text-xs rounded border border-neutral-700 hover:bg-neutral-800"
-              onClick={() => setSel(p)}
-            >
-              Open
-            </button>
-            <button
-              className="px-2 py-1 text-xs rounded border border-red-700 text-red-400 hover:bg-red-950/30"
-              onClick={() => onDelete(p.id)}
-            >
-              Delete
-            </button>
+            {p.description && (
+              <div className="text-xs text-gray-400 mb-3 line-clamp-2" title={p.description}>
+                {p.description}
+              </div>
+            )}
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <span>{new Date(p.created_at).toLocaleDateString()}</span>
+              <span className="text-purple-400">{(p.bytes / 1024 / 1024).toFixed(1)} MB</span>
+            </div>
           </div>
         </div>
       )),
@@ -166,107 +186,184 @@ export default function Photos() {
 
   return (
     <>
-      {loading && <span className="text-sm text-neutral-400">Loading…</span>}
-
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3 mb-4 flex gap-3 items-center">
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          className="text-sm"
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-        />
-        <input
-          type="text"
-          placeholder="Title (optional)"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="flex-1 px-3 py-2 rounded-lg bg-transparent border border-neutral-800"
-        />
-        <button
-          disabled={!file || busy}
-          onClick={onUpload}
-          className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50"
-        >
-          {busy ? "Uploading…" : "Upload"}
-        </button>
+      {/* Upload Section */}
+      <div className="bg-black/40 border border-gray-800 rounded-2xl p-6 mb-8 backdrop-blur-sm">
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <div className="flex-1 w-full">
+            <label className="block text-sm font-medium text-gray-300 mb-2">Upload Photo</label>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-600 file:text-white hover:file:bg-purple-500 transition-colors duration-200"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+          </div>
+          <div className="flex-1 w-full">
+            <label className="block text-sm font-medium text-gray-300 mb-2">Title (Optional)</label>
+            <input
+              type="text"
+              placeholder="Enter a title for your photo..."
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
+            />
+          </div>
+          <div className="w-full sm:w-auto">
+            <button
+              disabled={!file || busy}
+              onClick={onUpload}
+              className="w-full sm:w-auto px-8 py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-purple-500/25 disabled:shadow-none"
+            >
+              {busy ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Uploading...
+                </div>
+              ) : (
+                "Upload Photo"
+              )}
+            </button>
+          </div>
+        </div>
       </div>
 
-      {err && <div className="text-red-400 mb-3">{err}</div>}
+      {/* Error Display */}
+      {err && (
+        <div className="bg-red-900/20 border border-red-800 text-red-300 px-4 py-3 rounded-lg mb-6">
+          {err}
+        </div>
+      )}
 
-      {/* grid */}
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
-        {grid}
-      </div>
+      {/* Loading State */}
+      {loading && items.length === 0 && (
+        <div className="flex items-center justify-center py-20">
+          <div className="flex items-center gap-3 text-gray-400">
+            <div className="w-6 h-6 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+            <span>Loading your photos...</span>
+          </div>
+        </div>
+      )}
 
-      {/* pager */}
-      <div className="flex justify-center py-10">
-        {cursor ? (
+      {/* Photo Grid */}
+      {items.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 mb-8">
+          {grid}
+        </div>
+      )}
+
+      {/* Load More Button */}
+      {cursor && (
+        <div className="flex justify-center py-12">
           <button
             onClick={loadMore}
             disabled={loading}
-            className="px-4 py-2 rounded-lg border border-neutral-800 hover:bg-neutral-900 disabled:opacity-50"
+            className="px-8 py-3 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-800/50 text-gray-200 font-medium rounded-lg transition-all duration-200 border border-gray-700 hover:border-purple-500/50 disabled:cursor-not-allowed"
           >
-            {loading ? "Loading…" : "Load more"}
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+                Loading...
+              </div>
+            ) : (
+              "Load More Photos"
+            )}
           </button>
-        ) : (
-          <span className="text-neutral-500">No more</span>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && items.length === 0 && !err && (
+        <div className="text-center py-20">
+          <div className="w-24 h-24 mx-auto mb-6 bg-gray-800 rounded-full flex items-center justify-center">
+            <svg className="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-medium text-gray-300 mb-2">No photos yet</h3>
+          <p className="text-gray-500 mb-6">Upload your first photo to get started</p>
+        </div>
+      )}
 
       {/* Photo Edit Modal */}
       {sel && (
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           onClick={() => setSel(null)}
         >
           <div
-            className="bg-neutral-950 border border-neutral-800 rounded-xl w-full max-w-5xl grid md:grid-cols-2 gap-4 p-4"
+            className="bg-black border border-gray-800 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {sel._url && (
-              <img
-                src={sel._url}
-                alt={sel.title}
-                className="w-full max-h-[70vh] object-contain bg-black/50 rounded"
-              />
-            )}
+            <div className="grid lg:grid-cols-2 gap-0">
+              {/* Image Preview */}
+              <div className="bg-black p-6 flex items-center justify-center">
+                {sel._url && (
+                  <img
+                    src={sel._url}
+                    alt={sel.title}
+                    className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                  />
+                )}
+              </div>
 
-            <div className="flex flex-col gap-3">
-              <label className="text-sm text-neutral-400">
-                Title
-                <input
-                  value={sel.title || ""}
-                  onChange={(e) => setSel({ ...sel, title: e.target.value })}
-                  className="mt-1 w-full px-3 py-2 rounded-lg bg-transparent border border-neutral-800"
-                />
-              </label>
+              {/* Edit Form */}
+              <div className="p-8 bg-gray-900/50">
+                <div className="mb-6">
+                  <h3 className="text-2xl font-bold text-gray-100 mb-2">Edit Photo</h3>
+                  <p className="text-gray-400">Update your photo details</p>
+                </div>
 
-              <label className="text-sm text-neutral-400">
-                Description
-                <textarea
-                  rows={4}
-                  value={sel.description || ""}
-                  onChange={(e) => setSel({ ...sel, description: e.target.value })}
-                  className="mt-1 w-full px-3 py-2 rounded-lg bg-transparent border border-neutral-800"
-                />
-              </label>
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Title
+                    </label>
+                    <input
+                      value={sel.title || ""}
+                      onChange={(e) => setSel({ ...sel, title: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
+                      placeholder="Enter photo title..."
+                    />
+                  </div>
 
-              <div className="flex items-center gap-2 mt-2">
-                <button
-                  className="px-3 py-2 rounded-lg border border-neutral-800 hover:bg-neutral-900"
-                  onClick={() => setSel(null)}
-                >
-                  Close
-                </button>
-                <div className="flex-1" />
-                <button
-                  disabled={busy}
-                  className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50"
-                  onClick={onSaveSel}
-                >
-                  {busy ? "Saving…" : "Save"}
-                </button>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Description
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={sel.description || ""}
+                      onChange={(e) => setSel({ ...sel, description: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 resize-none"
+                      placeholder="Add a description..."
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-4">
+                    <button
+                      className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-200 font-medium rounded-lg transition-colors duration-200"
+                      onClick={() => setSel(null)}
+                    >
+                      Cancel
+                    </button>
+                    <div className="flex-1" />
+                    <button
+                      disabled={busy}
+                      className="px-6 py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all duration-200"
+                      onClick={onSaveSel}
+                    >
+                      {busy ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Saving...
+                        </div>
+                      ) : (
+                        "Save Changes"
+                      )}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

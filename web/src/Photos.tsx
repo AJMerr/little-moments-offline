@@ -22,7 +22,9 @@ export default function Photos() {
   const [file, setFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null); 
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showUploadForm, setShowUploadForm] = useState(false);
 
   const [viewPhoto, setViewPhoto] = useState<WithUrl | null>(null);
   const [editPhoto, setEditPhoto] = useState<WithUrl | null>(null);
@@ -90,7 +92,9 @@ export default function Photos() {
       setItems(cur => [meta, ...cur]);
       setFile(null);
       setTitle("");
+      setDescription("");
       if (fileRef.current) fileRef.current.value = "";               
+      setShowUploadForm(false); // Close the form after successful upload
     } catch (e: any) {
       alert(e?.message || "upload failed");
     } finally {
@@ -187,47 +191,76 @@ export default function Photos() {
 
   return (
     <>
-      {/* Upload Section */}
-      <div className="bg-black/40 border border-gray-800 rounded-2xl p-6 mb-8 backdrop-blur-sm">
-        <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <div className="flex-1 w-full">
-            <label className="block text-sm font-medium text-gray-300 mb-2">Upload Photo</label>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-600 file:text-white hover:file:bg-purple-500 transition-colors duration-200"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            />
-          </div>
-          <div className="flex-1 w-full">
-            <label className="block text-sm font-medium text-gray-300 mb-2">Title (Optional)</label>
-            <input
-              type="text"
-              placeholder="Enter a title for your photo..."
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
-            />
-          </div>
-          <div className="w-full sm:w-auto">
-            <button
-              disabled={!file || busy}
-              onClick={onUpload}
-              className="w-full sm:w-auto px-8 py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-purple-500/25 disabled:shadow-none"
-            >
-              {busy ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Uploading...
-                </div>
-              ) : (
-                "Upload Photo"
-              )}
-            </button>
+      {/* Header with Upload Toggle Button */}
+      <div className="flex justify-center mb-8">
+        <button
+          onClick={() => setShowUploadForm(!showUploadForm)}
+          className="px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-purple-500/25 flex items-center gap-2"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          {showUploadForm ? "Hide Upload Form" : "Upload New Photo"}
+        </button>
+      </div>
+
+      {/* Collapsible Upload Section */}
+      {showUploadForm && (
+        <div className="bg-black/40 border border-gray-800 rounded-2xl p-6 mb-8 backdrop-blur-sm">
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="w-full min-w-0">
+                <label className="block text-sm font-medium text-gray-300 mb-2">Upload Photo</label>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-600 file:text-white hover:file:bg-purple-500 transition-colors duration-200"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                />
+              </div>
+              <div className="w-full min-w-0">
+                <label className="block text-sm font-medium text-gray-300 mb-2">Title (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="Enter a title for your photo..."
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
+                />
+              </div>
+            </div>
+            
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-300 mb-2">Description (Optional)</label>
+              <textarea
+                placeholder="Add a description for your photo..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 resize-none"
+              />
+            </div>
+            
+            <div className="flex justify-end">
+              <button
+                disabled={!file || busy}
+                onClick={onUpload}
+                className="px-8 py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-purple-500/25 disabled:shadow-none"
+              >
+                {busy ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Uploading...
+                  </div>
+                ) : (
+                  "Upload Photo"
+                )}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Error Display */}
       {err && (
@@ -283,6 +316,12 @@ export default function Photos() {
           </div>
           <h3 className="text-xl font-medium text-gray-300 mb-2">No photos yet</h3>
           <p className="text-gray-500 mb-6">Upload your first photo to get started</p>
+          <button
+            onClick={() => setShowUploadForm(true)}
+            className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-all duration-200"
+          >
+            Upload Photo
+          </button>
         </div>
       )}
 
@@ -326,7 +365,7 @@ export default function Photos() {
               {viewPhoto._url && (
                 <img
                   src={viewPhoto._url}
-                  alt={viewPhoto.title || "photo"}
+                  alt={viewPhoto.title}
                   className="max-w-full max-h-[70vh] object-contain rounded-lg"
                 />
               )}

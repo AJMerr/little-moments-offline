@@ -1,7 +1,8 @@
 {
-  "name": "web",
+  "name": "little-moments-web",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Frontend for Little Moments - A privacy-first, self-hosted photo sharing app",
   "type": "module",
   "scripts": {
     "dev": "vite",

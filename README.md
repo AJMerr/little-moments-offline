@@ -92,15 +92,31 @@ POST /api/photos/confirm
 ```
 
 ## API Overview
+### Photos API
 Base Path: /api
-- ```GET /healthz``` → 200 OK
-- ```GET /photos?limit=24&cursor=…``` → { items: Photo[], next_cursor: ""|string }
-- ```GET /photos/{id}``` → Photo
-- ```GET /photos/{id}/url?ttl=300``` → { url, expires_at } (presigned GET)
-- ```POST /photos/presign``` → { url, key, headers }
-- ```POST /photos/confirm``` → 201 Created + Photo
-- ```PATCH /photos/{id} body``` { title?, description? } → updated Photo
-- ```DELETE /photos/{id}``` → 204 No Content
+
+| Method | Path               | Purpose                                                              |
+| -----: | ------------------ | -------------------------------------------------------------------- |
+|    GET | `/photos`          | List photos (cursor pagination)                                      |
+|    GET | `/photos/{id}`     | Get photo metadata by id                                             |
+|    GET | `/photos/{id}/url` | Get a presigned **GET** URL to display the image (`ttl` seconds)     |
+|   POST | `/photos/presign`  | Get a presigned **PUT** URL to upload a new object                   |
+|   POST | `/photos/confirm`  | Confirm uploaded object; create (or return existing) DB metadata row |
+|  PATCH | `/photos/{id}`     | Update title/description                                             |
+| DELETE | `/photos/{id}`     | Delete photo (DB row and backing object)                             |
+
+
+### Albums API
+| Method | Path                  | Purpose                         |
+| -----: | --------------------- | ------------------------------- |
+|   POST | `/albums`             | Create album                    |
+|    GET | `/albums`             | List albums (cursor pagination) |
+|    GET | `/albums/{id}`        | Get album (with paged photos)   |
+|  PATCH | `/albums/{id}`        | Update title/description/cover  |
+| DELETE | `/albums/{id}`        | Delete album (soft delete)      |
+|   POST | `/albums/{id}/photos` | Add photos to album             |
+| DELETE | `/albums/{id}/photos` | Remove photos from album        |
+
 
 ## Thanks
 - MinIO team for an awesome alternative solution to S3
